@@ -9,26 +9,28 @@ import (
 	"time"
 )
 
+var tasks = []Task{}
+
 func main() {
-	tasks := read()
-	cmd(tasks, os.Args)
-	write(tasks)
+	read()
+	cmd(os.Args)
+	write()
 }
 
-func cmd(tasks []Task, args []string) {
+func cmd(args []string) {
 	switch args[1] {
 	case "help":
 		help()
 	case "add":
-		add(tasks, args[2])
+		add(args[2])
 	case "update":
-		getTask(tasks, args[2]).update(args[3])
+		getTask(args[2]).update(args[3])
 	case "delete":
-		delete(&tasks, args[2])
+		delete(args[2])
 	case "mark":
-		getTask(tasks, args[2]).mark(args[3])
+		getTask(args[2]).mark(args[3])
 	case "list":
-		list(tasks, args[2])
+		list(args[2])
 	default:
 		log.Fatal(fmt.Errorf("Unknown commad: %s", args[1]))
 	}
@@ -51,17 +53,15 @@ func help() {
 	fmt.Printf("\n list [status (all/todo/in-progress/done)]")
 }
 
-func delete(t *[]Task, arg string) {
-	i := atoi(arg, *t)
-	n := *t
-	n = append(n[:i], n[i+1:]...)
-	for k := range n {
-		n[k].Id = k + 1
+func delete(arg string) {
+	i := atoi(arg)
+	tasks = append(tasks[:i], tasks[i+1:]...)
+	for k := range tasks {
+		tasks[k].Id = k + 1
 	}
-	*t = n
 }
 
-func atoi(a string, tasks []Task) int {
+func atoi(a string) int {
 	i, err := strconv.Atoi(a)
 	if err != nil || i > len(tasks) {
 		log.Fatal("Write id of task after command")
@@ -69,10 +69,9 @@ func atoi(a string, tasks []Task) int {
 	return i - 1
 }
 
-func getTask(tasks []Task, arg string) *Task {
-	i := atoi(arg, tasks)
-	p := &tasks[i]
-	return p
+func getTask(arg string) *Task {
+	i := atoi(arg)
+	return &tasks[i]
 
 }
 
@@ -94,7 +93,7 @@ func (t *Task) mark(stat string) {
 	}
 }
 
-func list(tasks []Task, which string) {
+func list(which string) {
 	switch which {
 	case "all":
 		for _, task := range tasks {
@@ -120,7 +119,7 @@ func print(t Task) {
 	fmt.Printf("\n%d)_ %s \n %s \n Created at: %s \n Updated at: %s \n \n", t.Id, t.Status, t.Description, t.CreatedAt.Format(layout), t.UpdatedAt.Format(layout))
 }
 
-func add(tasks []Task, d string) []Task {
+func add(d string) {
 	t := Task{
 		Id:          len(tasks) + 1,
 		Description: d,
@@ -128,16 +127,15 @@ func add(tasks []Task, d string) []Task {
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	return append(tasks, t)
+	tasks = append(tasks, t)
 }
 
-func read() []Task {
-	tasks := make([]Task, 0)
+func read() {
 	data, err := os.ReadFile("data.json")
 	if err != nil {
 		_, ok := err.(*os.PathError)
 		if ok {
-			return tasks
+			return
 		}
 		panic(err)
 	}
@@ -145,10 +143,9 @@ func read() []Task {
 	if err != nil {
 		log.Fatal("Data in file is not correct.")
 	}
-	return tasks
 }
 
-func write(tasks []Task) {
+func write() {
 	bytes, err := json.Marshal(tasks)
 	if err != nil {
 		panic(err)
