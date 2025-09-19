@@ -97,7 +97,7 @@ func list(which string) {
 	switch which {
 	case "all":
 		for _, task := range tasks {
-			print(task)
+			task.print()
 		}
 	case "todo":
 		fallthrough
@@ -106,7 +106,7 @@ func list(which string) {
 	case "done":
 		for _, task := range tasks {
 			if task.Status == which {
-				print(task)
+				task.print()
 			}
 		}
 	default:
