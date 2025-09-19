@@ -114,7 +114,7 @@ func list(which string) {
 	}
 }
 
-func print(t Task) {
+func (t Task) print() {
 	layout := "15:04___02.01"
 	fmt.Printf("\n%d)_ %s \n %s \n Created at: %s \n Updated at: %s \n \n", t.Id, t.Status, t.Description, t.CreatedAt.Format(layout), t.UpdatedAt.Format(layout))
 }
