@@ -2,55 +2,63 @@ package task
 
 import (
 	"fmt"
-	"log"
+	"gott/internal/storage"
 	"strconv"
-	"time"
 )
 
 type Service struct {
-	tasks []Task
+	repo storage.TaskRepo
 }
 
-func NewService(t []Task) Service {
-	return Service{
-		tasks: t,
+func NewService(r storage.TaskRepo) Service {
+	return Service{repo: r}
+}
+
+func (s Service) Cmd(args []string) error {
+	if len(args) < 2 {
+		return fmt.Errorf("Commad is not written")
 	}
-}
+	var num int
+	var err error
+	switch args[1] {
+	case "mark":
+		if len(args) < 4 {
+			return fmt.Errorf("Not anough args for mark")
+		}
+		fallthrough
+	case "delete":
+		fallthrough
+	case "update":
+		if len(args) < 3 {
+			return fmt.Errorf("Need id to %s", args[1])
+		}
+		num, err = strconv.Atoi(args[2])
+		if err != nil {
+			return err
+		}
+		if num < 0 {
+			return fmt.Errorf("Id can't be < 0")
+		}
 
-func (s Service) Data() []Task {
-	return s.tasks
-}
-
-func (s Service) Cmd(args []string) {
+	}
 	switch args[1] {
 	case "help":
 		help()
 	case "add":
-		s.add(args[2])
+		_, err = s.repo.AddTask(args[2])
 	case "update":
-		s.getTask(args[2]).update(args[3])
+		err = s.repo.UpdateTask(num, args[3])
 	case "delete":
-		s.delete(args[2])
+		err = s.repo.DeleteTask(num)
 	case "mark":
-		s.getTask(args[2]).mark(args[3])
+		err = s.repo.MarkTask(num, args[3])
 	case "list":
-		s.list(args[2])
+		err = s.repo.ListTasks(args[2])
 	default:
-		log.Fatal(fmt.Errorf("Unknown commad: %s", args[1]))
+		return fmt.Errorf("Unknown commad: %s", args[1])
 	}
-}
 
-func (s Service) atoi(a string) int {
-	i, err := strconv.Atoi(a)
-	if err != nil || i > len(s.tasks) {
-		log.Fatal("Write id of task after command")
-	}
-	return i - 1
-}
-
-func (s Service) getTask(arg string) *Task {
-	i := s.atoi(arg)
-	return &s.tasks[i]
+	return err
 }
 
 func help() {
@@ -60,44 +68,4 @@ func help() {
 	fmt.Printf("\n update [id] [addition]")
 	fmt.Printf("\n delete [id]")
 	fmt.Printf("\n list [status (all/todo/in-progress/done)]")
-}
-
-func (s Service) add(d string) {
-	t := Task{
-		Id:          len(s.tasks) + 1,
-		Description: d,
-		Status:      "todo",
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-	}
-	s.tasks = append(s.tasks, t)
-}
-
-func (s Service) delete(arg string) {
-	i := s.atoi(arg)
-	s.tasks = append(s.tasks[:i], s.tasks[i+1:]...)
-	for k := range s.tasks {
-		s.tasks[k].Id = k + 1
-	}
-}
-
-func (s Service) list(which string) {
-	switch which {
-	case "all":
-		for _, task := range s.tasks {
-			print(task)
-		}
-	case "todo":
-		fallthrough
-	case "in-progress":
-		fallthrough
-	case "done":
-		for _, task := range s.tasks {
-			if task.Status == which {
-				print(task)
-			}
-		}
-	default:
-		log.Fatal(fmt.Errorf("Unknown status of task: %s", which))
-	}
 }

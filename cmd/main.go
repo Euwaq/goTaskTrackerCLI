@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	s := task.NewService(storage.Read())
+	s := task.NewService(storage.NewJsonRepo())
 	s.Cmd(os.Args)
-	storage.Write(s.Data())
+
 }
