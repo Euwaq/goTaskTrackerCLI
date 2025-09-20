@@ -53,7 +53,13 @@ func (s Service) Cmd(args []string) error {
 	case "mark":
 		err = s.repo.MarkTask(num, args[3])
 	case "list":
-		err = s.repo.ListTasks(args[2])
+		list, err := s.repo.ListTasks(args[2])
+		if err != nil {
+			return err
+		}
+		for _, t := range list {
+			t.Print()
+		}
 	default:
 		return fmt.Errorf("Unknown commad: %s", args[1])
 	}

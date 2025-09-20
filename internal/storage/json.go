@@ -31,26 +31,25 @@ func (jr JsonRepo) AddTask(description string) (int, error) {
 	return t.Id, jr.write()
 }
 
-func (jr JsonRepo) ListTasks(status string) error {
+func (jr JsonRepo) ListTasks(status string) ([]model.Task, error) {
 	switch status {
 	case "all":
-		for _, task := range jr.tasks {
-			task.Print()
-		}
+		return jr.tasks, nil
 	case "todo":
 		fallthrough
 	case "in-progress":
 		fallthrough
 	case "done":
+		list := make([]model.Task, 0)
 		for _, task := range jr.tasks {
 			if task.Status == status {
-				task.Print()
+				list = append(list, task)
 			}
 		}
+		return list, nil
 	default:
-		return fmt.Errorf("Unknown status of task: %s", status)
+		return nil, fmt.Errorf("Unknown status of task: %s", status)
 	}
-	return nil
 }
 
 func (jr JsonRepo) UpdateTask(id int, dlc string) error {
