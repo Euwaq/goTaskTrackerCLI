@@ -9,14 +9,14 @@ import (
 )
 
 type JsonRepo struct {
-	FileName string
+	fileName string
 	MaxId    int
 	Tasks    map[int]model.Task
 }
 
 func NewJsonRepo(fileName string) (JsonRepo, error) {
 	jr := JsonRepo{
-		FileName: fileName,
+		fileName: fileName,
 		MaxId:    0,
 		Tasks:    make(map[int]model.Task, 0),
 	}
@@ -102,7 +102,7 @@ func (jr JsonRepo) write() error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(jr.FileName, bytes, 0644)
+	err = os.WriteFile(jr.fileName, bytes, 0644)
 	return err
 
 }
