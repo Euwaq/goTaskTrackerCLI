@@ -7,7 +7,11 @@ import (
 )
 
 func main() {
-	s := task.NewService(storage.NewJsonRepo())
+	jr, err := storage.NewJsonRepo("data.json")
+	if err != nil {
+		panic(err)
+	}
+	s := task.NewService(jr)
 	s.Cmd(os.Args)
 
 }
