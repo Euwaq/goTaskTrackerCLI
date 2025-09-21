@@ -9,49 +9,49 @@ import (
 )
 
 type JsonRepo struct {
-	fileName string
-	maxId    int
-	tasks    map[int]model.Task
+	FileName string
+	MaxId    int
+	Tasks    map[int]model.Task
 }
 
 func NewJsonRepo(fileName string) (JsonRepo, error) {
 	jr := JsonRepo{
-		fileName: fileName,
-		maxId:    0,
-		tasks:    make(map[int]model.Task, 0),
+		FileName: fileName,
+		MaxId:    0,
+		Tasks:    make(map[int]model.Task, 0),
 	}
 	data, err1 := os.ReadFile(fileName)
 	if err1 != nil {
-		return jr, nil
+		return jr, err1
 	}
 	err2 := json.Unmarshal(data, &jr)
 	return jr, err2
 }
 
 func (jr JsonRepo) AddTask(description string) (int, error) {
-	jr.maxId++
+	jr.MaxId++
 	t := model.Task{
-		Id:          jr.maxId,
+		Id:          jr.MaxId,
 		Description: description,
 		Status:      "todo",
 		CreatedAt:   time.Now(),
 		UpdatedAt:   time.Now(),
 	}
-	jr.tasks[jr.maxId] = t
+	jr.Tasks[jr.MaxId] = t
 	return t.Id, jr.write()
 }
 
 func (jr JsonRepo) ListTasks(status string) (map[int]model.Task, error) {
 	switch status {
 	case "all":
-		return jr.tasks, nil
+		return jr.Tasks, nil
 	case "todo":
 		fallthrough
 	case "in-progress":
 		fallthrough
 	case "done":
 		list := make(map[int]model.Task, 0)
-		for id, task := range jr.tasks {
+		for id, task := range jr.Tasks {
 			if task.Status == status {
 				list[id] = task
 			}
@@ -63,13 +63,13 @@ func (jr JsonRepo) ListTasks(status string) (map[int]model.Task, error) {
 }
 
 func (jr JsonRepo) UpdateTask(id int, dlc string) error {
-	task, ok := jr.tasks[id]
+	task, ok := jr.Tasks[id]
 	if !ok {
 		return fmt.Errorf("Have not task with id=%d", id)
 	}
 	task.Description += "\n" + dlc
 	task.UpdatedAt = time.Now()
-	jr.tasks[id] = task
+	jr.Tasks[id] = task
 	return jr.write()
 }
 
@@ -80,12 +80,12 @@ func (jr JsonRepo) MarkTask(id int, status string) error {
 	case "in-progress":
 		fallthrough
 	case "done":
-		task, ok := jr.tasks[id]
+		task, ok := jr.Tasks[id]
 		if !ok {
 			return fmt.Errorf("Have not task with id=%d", id)
 		}
 		task.Status = status
-		jr.tasks[id] = task
+		jr.Tasks[id] = task
 	default:
 		return fmt.Errorf("Unknown status of task: %s", status)
 	}
@@ -93,7 +93,7 @@ func (jr JsonRepo) MarkTask(id int, status string) error {
 }
 
 func (jr JsonRepo) DeleteTask(id int) error {
-	delete(jr.tasks, id)
+	delete(jr.Tasks, id)
 	return jr.write()
 }
 
@@ -102,7 +102,7 @@ func (jr JsonRepo) write() error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(jr.fileName, bytes, 0644)
+	err = os.WriteFile(jr.FileName, bytes, 0644)
 	return err
 
 }
